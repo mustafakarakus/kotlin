@@ -63,6 +63,8 @@ class ReifiedTypeInliner<KT : KotlinTypeMarker>(
     interface IntrinsicsSupport<KT : KotlinTypeMarker> {
         fun putClassInstance(v: InstructionAdapter, type: KT)
 
+        fun generateNewTypeParameter(v: InstructionAdapter, typeParameter: TypeParameterMarker)
+
         fun toKotlinType(type: KT): KotlinType
     }
 
