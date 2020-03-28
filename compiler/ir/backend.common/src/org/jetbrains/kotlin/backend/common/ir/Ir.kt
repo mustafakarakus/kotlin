@@ -90,7 +90,7 @@ open class BuiltinSymbolsBase(protected val builtIns: KotlinBuiltIns, private va
     val intProgression = progression("IntProgression")
     val longProgression = progression("LongProgression")
     val progressionClasses = listOf(charProgression, intProgression, longProgression)
-    val progressionClassesTypes = progressionClasses.map { it.descriptor.defaultType }.toSet()
+    val progressionClassesTypes = progressionClasses.map { it.trueDescriptor.defaultType }.toSet()
 
     val getProgressionLastElementByReturnType = builtInsPackage("kotlin", "internal").getContributedFunctions(
         Name.identifier("getProgressionLastElement"),
@@ -109,7 +109,7 @@ open class BuiltinSymbolsBase(protected val builtIns: KotlinBuiltIns, private va
     val long = symbolTable.referenceClass(builtIns.long)
 
     val integerClasses = listOf(byte, short, int, long)
-    val integerClassesTypes = integerClasses.map { it.descriptor.defaultType }
+    val integerClassesTypes = integerClasses.map { it.trueDescriptor.defaultType }
 
     val arrayOf = getSimpleFunction(Name.identifier("arrayOf")) {
         it.extensionReceiverParameter == null && it.dispatchReceiverParameter == null && it.valueParameters.size == 1 &&

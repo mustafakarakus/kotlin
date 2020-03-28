@@ -6,7 +6,7 @@
 package org.jetbrains.kotlin.ir.types
 
 import org.jetbrains.kotlin.ir.descriptors.IrBuiltIns
-import org.jetbrains.kotlin.ir.symbols.FqNameEqualityChecker
+import org.jetbrains.kotlin.ir.symbols.SignatureEqualityChecker
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrClassifierSymbol
 import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
@@ -23,7 +23,7 @@ fun IrClassifierSymbol.superTypes() = when (this) {
 }
 
 fun IrClassifierSymbol.isSubtypeOfClass(superClass: IrClassSymbol): Boolean {
-    if (FqNameEqualityChecker.areEqual(this, superClass)) return true
+    if (SignatureEqualityChecker.areEqual(this, superClass)) return true
     return superTypes().any { it.isSubtypeOfClass(superClass) }
 }
 
@@ -47,7 +47,7 @@ fun Collection<IrClassifierSymbol>.commonSuperclass(): IrClassifierSymbol {
                 superClassifiers = visited
             } else {
                 superClassifiers!!.apply {
-                    retainAll { c -> visited.any { v -> FqNameEqualityChecker.areEqual(c, v) } }
+                    retainAll { c -> visited.any { v -> SignatureEqualityChecker.areEqual(c, v) } }
                 }
             }
         }
@@ -55,7 +55,7 @@ fun Collection<IrClassifierSymbol>.commonSuperclass(): IrClassifierSymbol {
 
     requireNotNull(superClassifiers)
 
-    return order.firstOrNull { o -> superClassifiers!!.any { s -> FqNameEqualityChecker.areEqual(o, s) } }
+    return order.firstOrNull { o -> superClassifiers!!.any { s -> SignatureEqualityChecker.areEqual(o, s) } }
         ?: error(
             "No common superType found for non-empty set of classifiers: ${joinToString(
                 prefix = "[",

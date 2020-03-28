@@ -38,17 +38,17 @@ class IrClassImpl(
     endOffset: Int,
     origin: IrDeclarationOrigin,
     override val symbol: IrClassSymbol,
-    override val name: Name = symbol.descriptor.name,
-    override val kind: ClassKind = symbol.descriptor.kind,
-    visibility: Visibility = symbol.descriptor.visibility,
-    modality: Modality = symbol.descriptor.modality,
-    override val isCompanion: Boolean = symbol.descriptor.isCompanionObject,
-    override val isInner: Boolean = symbol.descriptor.isInner,
-    override val isData: Boolean = symbol.descriptor.isData,
-    override val isExternal: Boolean = symbol.descriptor.isEffectivelyExternal(),
-    override val isInline: Boolean = symbol.descriptor.isInline,
-    override val isExpect: Boolean = symbol.descriptor.isExpect,
-    override val isFun: Boolean = symbol.descriptor.isFun
+    override val name: Name = symbol.trueDescriptor.name,
+    override val kind: ClassKind = symbol.trueDescriptor.kind,
+    visibility: Visibility = symbol.trueDescriptor.visibility,
+    modality: Modality = symbol.trueDescriptor.modality,
+    override val isCompanion: Boolean = symbol.trueDescriptor.isCompanionObject,
+    override val isInner: Boolean = symbol.trueDescriptor.isInner,
+    override val isData: Boolean = symbol.trueDescriptor.isData,
+    override val isExternal: Boolean = symbol.trueDescriptor.isEffectivelyExternal(),
+    override val isInline: Boolean = symbol.trueDescriptor.isInline,
+    override val isExpect: Boolean = symbol.trueDescriptor.isExpect,
+    override val isFun: Boolean = symbol.trueDescriptor.isFun
 ) :
     IrDeclarationBase<ClassCarrier>(startOffset, endOffset, origin),
     IrClass,
@@ -59,21 +59,21 @@ class IrClassImpl(
         endOffset: Int,
         origin: IrDeclarationOrigin,
         symbol: IrClassSymbol,
-        modality: Modality = symbol.descriptor.modality,
-        visibility: Visibility = symbol.descriptor.visibility
+        modality: Modality = symbol.trueDescriptor.modality,
+        visibility: Visibility = symbol.trueDescriptor.visibility
     ) :
             this(
                 startOffset, endOffset, origin, symbol,
-                symbol.descriptor.name, symbol.descriptor.kind,
+                symbol.trueDescriptor.name, symbol.trueDescriptor.kind,
                 visibility,
                 modality = modality,
-                isCompanion = symbol.descriptor.isCompanionObject,
-                isInner = symbol.descriptor.isInner,
-                isData = symbol.descriptor.isData,
-                isExternal = symbol.descriptor.isEffectivelyExternal(),
-                isInline = symbol.descriptor.isInline,
-                isExpect = symbol.descriptor.isExpect,
-                isFun = symbol.descriptor.isFun
+                isCompanion = symbol.trueDescriptor.isCompanionObject,
+                isInner = symbol.trueDescriptor.isInner,
+                isData = symbol.trueDescriptor.isData,
+                isExternal = symbol.trueDescriptor.isEffectivelyExternal(),
+                isInline = symbol.trueDescriptor.isInline,
+                isExpect = symbol.trueDescriptor.isExpect,
+                isFun = symbol.trueDescriptor.isFun
             )
 
     init {

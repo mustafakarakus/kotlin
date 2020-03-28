@@ -29,18 +29,17 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformer
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.name.Name
-import org.jetbrains.kotlin.utils.SmartList
 
 class IrVariableImpl(
     override val startOffset: Int,
     override val endOffset: Int,
     override var origin: IrDeclarationOrigin,
     override val symbol: IrVariableSymbol,
-    override val name: Name = symbol.descriptor.name,
+    override val name: Name = symbol.trueDescriptor.name,
     override val type: IrType,
-    override val isVar: Boolean = symbol.descriptor.isVar,
-    override val isConst: Boolean = symbol.descriptor.isConst,
-    override val isLateinit: Boolean = symbol.descriptor.isLateInit
+    override val isVar: Boolean = symbol.trueDescriptor.isVar,
+    override val isConst: Boolean = symbol.trueDescriptor.isConst,
+    override val isLateinit: Boolean = symbol.trueDescriptor.isLateInit
 ) : IrVariable {
 
     private var _parent: IrDeclarationParent? = null
@@ -62,10 +61,10 @@ class IrVariableImpl(
         type: IrType
     ) : this(
         startOffset, endOffset, origin, symbol,
-        symbol.descriptor.name, type,
-        isVar = symbol.descriptor.isVar,
-        isConst = symbol.descriptor.isConst,
-        isLateinit = symbol.descriptor.isLateInit
+        symbol.trueDescriptor.name, type,
+        isVar = symbol.trueDescriptor.isVar,
+        isConst = symbol.trueDescriptor.isConst,
+        isLateinit = symbol.trueDescriptor.isLateInit
     )
 
     constructor(

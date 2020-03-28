@@ -23,16 +23,16 @@ class IrFunctionImpl(
     endOffset: Int,
     origin: IrDeclarationOrigin,
     override val symbol: IrSimpleFunctionSymbol,
-    name: Name = symbol.descriptor.name,
-    visibility: Visibility = symbol.descriptor.visibility,
-    override val modality: Modality = symbol.descriptor.modality,
+    name: Name = symbol.trueDescriptor.name,
+    visibility: Visibility = symbol.trueDescriptor.visibility,
+    override val modality: Modality = symbol.trueDescriptor.modality,
     returnType: IrType,
-    isInline: Boolean = symbol.descriptor.isInline,
-    isExternal: Boolean = symbol.descriptor.isExternal,
-    override val isTailrec: Boolean = symbol.descriptor.isTailrec,
-    override val isSuspend: Boolean = symbol.descriptor.isSuspend,
-    override val isOperator: Boolean = symbol.descriptor.isOperator,
-    isExpect: Boolean = symbol.descriptor.isExpect,
+    isInline: Boolean = symbol.trueDescriptor.isInline,
+    isExternal: Boolean = symbol.trueDescriptor.isExternal,
+    override val isTailrec: Boolean = symbol.trueDescriptor.isTailrec,
+    override val isSuspend: Boolean = symbol.trueDescriptor.isSuspend,
+    override val isOperator: Boolean = symbol.trueDescriptor.isOperator,
+    isExpect: Boolean = symbol.trueDescriptor.isExpect,
     override val isFakeOverride: Boolean = origin == IrDeclarationOrigin.FAKE_OVERRIDE
 ) :
     IrFunctionBase<FunctionCarrier>(startOffset, endOffset, origin, name, visibility, isInline, isExternal, isExpect, returnType),
@@ -45,21 +45,21 @@ class IrFunctionImpl(
         origin: IrDeclarationOrigin,
         symbol: IrSimpleFunctionSymbol,
         returnType: IrType,
-        visibility: Visibility = symbol.descriptor.visibility,
-        modality: Modality = symbol.descriptor.modality
+        visibility: Visibility = symbol.trueDescriptor.visibility,
+        modality: Modality = symbol.trueDescriptor.modality
     ) : this(
         startOffset, endOffset, origin, symbol,
-        symbol.descriptor.name,
+        symbol.trueDescriptor.name,
         visibility,
         modality,
         returnType,
-        isInline = symbol.descriptor.isInline,
-        isExternal = symbol.descriptor.isExternal,
-        isTailrec = symbol.descriptor.isTailrec,
-        isSuspend = symbol.descriptor.isSuspend,
-        isExpect = symbol.descriptor.isExpect,
+        isInline = symbol.trueDescriptor.isInline,
+        isExternal = symbol.trueDescriptor.isExternal,
+        isTailrec = symbol.trueDescriptor.isTailrec,
+        isSuspend = symbol.trueDescriptor.isSuspend,
+        isExpect = symbol.trueDescriptor.isExpect,
         isFakeOverride = origin == IrDeclarationOrigin.FAKE_OVERRIDE,
-        isOperator = symbol.descriptor.isOperator
+        isOperator = symbol.trueDescriptor.isOperator
     )
 
     override val descriptor: FunctionDescriptor get() = symbol.descriptor

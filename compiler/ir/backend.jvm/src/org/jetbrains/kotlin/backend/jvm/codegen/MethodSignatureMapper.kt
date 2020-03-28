@@ -12,12 +12,10 @@ import org.jetbrains.kotlin.backend.common.lower.parentsWithSelf
 import org.jetbrains.kotlin.backend.jvm.JvmBackendContext
 import org.jetbrains.kotlin.backend.jvm.JvmLoweredDeclarationOrigin
 import org.jetbrains.kotlin.backend.jvm.ir.getJvmNameFromAnnotation
-import org.jetbrains.kotlin.backend.jvm.ir.hasJvmDefault
 import org.jetbrains.kotlin.backend.jvm.ir.isCompiledToJvmDefault
 import org.jetbrains.kotlin.backend.jvm.ir.propertyIfAccessor
 import org.jetbrains.kotlin.backend.jvm.lower.*
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
-import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.JvmCodegenUtil
 import org.jetbrains.kotlin.codegen.replaceValueParametersIn
 import org.jetbrains.kotlin.codegen.signature.BothSignatureWriter
@@ -72,7 +70,8 @@ class MethodSignatureMapper(private val context: JvmBackendContext) {
             if (platformName != null) return platformName
         }
 
-        val nameForSpecialFunction = getJvmMethodNameIfSpecial(function.descriptor)
+        // TODO: remove essential use of descriptors
+        val nameForSpecialFunction = getJvmMethodNameIfSpecial(function.symbol.trueDescriptor)
         if (nameForSpecialFunction != null) return nameForSpecialFunction
 
         val property = (function as? IrSimpleFunction)?.correspondingPropertySymbol?.owner
@@ -189,8 +188,8 @@ class MethodSignatureMapper(private val context: JvmBackendContext) {
     private fun mapSignature(function: IrFunction, skipGenericSignature: Boolean): JvmMethodGenericSignature {
         if (function is IrLazyFunctionBase && function.initialSignatureFunction != null) {
             // Overrides of special builtin in Kotlin classes always have special signature
-            if (function.descriptor.getOverriddenBuiltinReflectingJvmDescriptor() == null ||
-                function.descriptor.containingDeclaration.original is JavaClassDescriptor
+            if (function.symbol.trueDescriptor.getOverriddenBuiltinReflectingJvmDescriptor() == null ||
+                function.symbol.trueDescriptor.containingDeclaration.original is JavaClassDescriptor
             ) {
                 return mapSignature(function.initialSignatureFunction!!, skipGenericSignature)
             }

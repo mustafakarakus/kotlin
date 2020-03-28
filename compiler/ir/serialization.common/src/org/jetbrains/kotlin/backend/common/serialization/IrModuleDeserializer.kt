@@ -232,19 +232,19 @@ open class CurrentModuleDeserializer(
 
     private fun declareIrDeclarationDefault(symbol: IrSymbol): IrDeclaration {
         return when (symbol) {
-            is IrClassSymbol -> symbolTable.declareClass(offset, offset, IrDeclarationOrigin.DEFINED, symbol.descriptor)
-            is IrConstructorSymbol -> symbolTable.declareConstructor(offset, offset, IrDeclarationOrigin.DEFINED, symbol.descriptor)
-            is IrSimpleFunctionSymbol -> symbolTable.declareSimpleFunction(offset, offset, IrDeclarationOrigin.DEFINED, symbol.descriptor)
-            is IrPropertySymbol -> symbolTable.declareProperty(offset, offset, IrDeclarationOrigin.DEFINED, symbol.descriptor)
+            is IrClassSymbol -> symbolTable.declareClass(offset, offset, IrDeclarationOrigin.DEFINED, symbol.trueDescriptor)
+            is IrConstructorSymbol -> symbolTable.declareConstructor(offset, offset, IrDeclarationOrigin.DEFINED, symbol.trueDescriptor)
+            is IrSimpleFunctionSymbol -> symbolTable.declareSimpleFunction(offset, offset, IrDeclarationOrigin.DEFINED, symbol.trueDescriptor)
+            is IrPropertySymbol -> symbolTable.declareProperty(offset, offset, IrDeclarationOrigin.DEFINED, symbol.trueDescriptor)
             is IrTypeAliasSymbol -> TODO("Implement type alias $symbol")
-            is IrEnumEntrySymbol -> symbolTable.declareEnumEntry(offset, offset, IrDeclarationOrigin.DEFINED, symbol.descriptor)
+            is IrEnumEntrySymbol -> symbolTable.declareEnumEntry(offset, offset, IrDeclarationOrigin.DEFINED, symbol.trueDescriptor)
             else -> error("Unexpected symbol $symbol")
         }
     }
 
     private fun declareIrSymbolImpl(symbol: IrSymbol): IrSymbolOwner {
         if (symbol.isBound) return symbol.owner
-        val descriptor = symbol.descriptor
+        val descriptor = symbol.trueDescriptor
 
         assert(descriptor !is WrappedDeclarationDescriptor<*>)
 

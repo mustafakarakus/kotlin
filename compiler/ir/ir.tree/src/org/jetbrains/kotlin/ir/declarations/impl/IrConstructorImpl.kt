@@ -32,13 +32,13 @@ class IrConstructorImpl(
     endOffset: Int,
     origin: IrDeclarationOrigin,
     override val symbol: IrConstructorSymbol,
-    name: Name = symbol.descriptor.name,
-    visibility: Visibility = symbol.descriptor.visibility,
+    name: Name = symbol.trueDescriptor.name,
+    visibility: Visibility = symbol.trueDescriptor.visibility,
     returnType: IrType,
-    isInline: Boolean = symbol.descriptor.isInline,
-    isExternal: Boolean = symbol.descriptor.isEffectivelyExternal(),
-    override val isPrimary: Boolean = symbol.descriptor.isPrimary,
-    isExpect: Boolean = symbol.descriptor.isExpect
+    isInline: Boolean = symbol.trueDescriptor.isInline,
+    isExternal: Boolean = symbol.trueDescriptor.isEffectivelyExternal(),
+    override val isPrimary: Boolean = symbol.trueDescriptor.isPrimary,
+    isExpect: Boolean = symbol.trueDescriptor.isExpect
 ) :
     IrFunctionBase<ConstructorCarrier>(
         startOffset, endOffset, origin, name,
@@ -58,13 +58,13 @@ class IrConstructorImpl(
         body: IrBody? = null
     ) : this(
         startOffset, endOffset, origin, symbol,
-        symbol.descriptor.name,
-        symbol.descriptor.visibility,
+        symbol.trueDescriptor.name,
+        symbol.trueDescriptor.visibility,
         returnType,
-        isInline = symbol.descriptor.isInline,
-        isExternal = symbol.descriptor.isEffectivelyExternal(),
-        isPrimary = symbol.descriptor.isPrimary,
-        isExpect = symbol.descriptor.isExpect
+        isInline = symbol.trueDescriptor.isInline,
+        isExternal = symbol.trueDescriptor.isEffectivelyExternal(),
+        isPrimary = symbol.trueDescriptor.isPrimary,
+        isExpect = symbol.trueDescriptor.isExpect
     ) {
         this.body = body
     }

@@ -36,12 +36,12 @@ class IrFieldImpl(
     endOffset: Int,
     origin: IrDeclarationOrigin,
     override val symbol: IrFieldSymbol,
-    override val name: Name = symbol.descriptor.name,
+    override val name: Name = symbol.trueDescriptor.name,
     override val type: IrType,
-    override val visibility: Visibility = symbol.descriptor.visibility,
-    override val isFinal: Boolean = !symbol.descriptor.isVar,
-    override val isExternal: Boolean = symbol.descriptor.isEffectivelyExternal(),
-    override val isStatic: Boolean = symbol.descriptor.dispatchReceiverParameter == null,
+    override val visibility: Visibility = symbol.trueDescriptor.visibility,
+    override val isFinal: Boolean = !symbol.trueDescriptor.isVar,
+    override val isExternal: Boolean = symbol.trueDescriptor.isEffectivelyExternal(),
+    override val isStatic: Boolean = symbol.trueDescriptor.dispatchReceiverParameter == null,
     override val isFakeOverride: Boolean = origin == IrDeclarationOrigin.FAKE_OVERRIDE
 ) : IrDeclarationBase<FieldCarrier>(startOffset, endOffset, origin),
     IrField,
@@ -53,14 +53,14 @@ class IrFieldImpl(
         origin: IrDeclarationOrigin,
         symbol: IrFieldSymbol,
         type: IrType,
-        visibility: Visibility = symbol.descriptor.visibility
+        visibility: Visibility = symbol.trueDescriptor.visibility
     ) :
             this(
                 startOffset, endOffset, origin, symbol,
-                symbol.descriptor.name, type, visibility,
-                isFinal = !symbol.descriptor.isVar,
-                isExternal = symbol.descriptor.isEffectivelyExternal(),
-                isStatic = symbol.descriptor.dispatchReceiverParameter == null,
+                symbol.trueDescriptor.name, type, visibility,
+                isFinal = !symbol.trueDescriptor.isVar,
+                isExternal = symbol.trueDescriptor.isEffectivelyExternal(),
+                isStatic = symbol.trueDescriptor.dispatchReceiverParameter == null,
                 isFakeOverride = origin == IrDeclarationOrigin.FAKE_OVERRIDE
             )
 

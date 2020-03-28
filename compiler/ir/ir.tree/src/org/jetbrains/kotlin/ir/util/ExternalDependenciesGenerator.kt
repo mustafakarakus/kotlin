@@ -76,7 +76,8 @@ class ExternalDependenciesGenerator(
 fun List<IrProvider>.getDeclaration(symbol: IrSymbol): IrDeclaration =
     firstNotNullResult { provider ->
         provider.getDeclaration(symbol)
-    } ?: error("Could not find declaration for unbound symbol $symbol")
+    } ?:
+    error("Could not find declaration for unbound symbol $symbol with descriptor ${symbol.trueDescriptor}")
 
 // In most cases, IrProviders list consist of an optional deserializer and a DeclarationStubGenerator.
 fun generateTypicalIrProviderList(

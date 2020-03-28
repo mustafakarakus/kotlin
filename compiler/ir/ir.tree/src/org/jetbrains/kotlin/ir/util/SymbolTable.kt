@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.ir.symbols.impl.*
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.impl.IrUninitializedType
 import org.jetbrains.kotlin.serialization.deserialization.descriptors.DescriptorWithContainerSource
+import org.jetbrains.kotlin.utils.addToStdlib.safeAs
 
 interface IrProvider {
     fun getDeclaration(symbol: IrSymbol): IrDeclaration?
@@ -143,13 +144,15 @@ open class SymbolTable(
             assert(d0 === d) {
                 "Non-original descriptor in declaration: $d\n\tExpected: $d0"
             }
-            val s = get(d0)
+            val d1: D = (d0 as? WrappedDeclarationDescriptor<*>)?.owner?.safeAs<IrSymbolOwner>()?.symbol?.trueDescriptor as? D
+                ?: d0
+            val s = get(d1)
             if (s == null) {
                 val new = orElse()
                 assert(unboundSymbols.add(new)) {
                     "Symbol for ${new.descriptor} was already referenced"
                 }
-                set(d0, new)
+                set(d1, new)
                 return new
             }
             return s
@@ -379,7 +382,7 @@ open class SymbolTable(
                 startOffset, endOffset, origin, it,
                 nameProvider.nameForDeclaration(descriptor),
                 visibility = visibility, modality = modality,
-            ).apply { metadata = MetadataSource.Class(it.descriptor) }
+            ).apply { metadata = MetadataSource.Class(descriptor) }
         }
     ): IrClass {
         return classSymbolTable.declare(
@@ -427,7 +430,7 @@ open class SymbolTable(
                 nameProvider.nameForDeclaration(descriptor),
                 returnType = IrUninitializedType
             ).apply {
-                metadata = MetadataSource.Function(it.descriptor)
+                metadata = MetadataSource.Function(descriptor)
             }
         }
     ): IrConstructor =
@@ -519,9 +522,9 @@ open class SymbolTable(
             IrFieldImpl(
                 startOffset, endOffset, origin, it,
                 nameProvider.nameForDeclaration(descriptor),
-                type, visibility ?: it.descriptor.visibility,
+                type, visibility ?: it.trueDescriptor.visibility,
             ).apply {
-                metadata = MetadataSource.Property(it.descriptor)
+                metadata = MetadataSource.Property(descriptor)
             }
         }
     ): IrField =
@@ -585,7 +588,7 @@ open class SymbolTable(
                 startOffset, endOffset, origin, symbol, isDelegated = isDelegated,
                 name = nameProvider.nameForDeclaration(descriptor)
             ).apply {
-                metadata = MetadataSource.Property(symbol.descriptor)
+                metadata = MetadataSource.Property(descriptor)
             }
         }
     ): IrProperty =
@@ -666,7 +669,7 @@ open class SymbolTable(
                 nameProvider.nameForDeclaration(descriptor),
                 returnType = IrUninitializedType
             ).apply {
-                metadata = MetadataSource.Function(it.descriptor)
+                metadata = MetadataSource.Function(descriptor)
             }
         }
     ): IrSimpleFunction {
@@ -782,7 +785,7 @@ open class SymbolTable(
         )
 
     fun introduceValueParameter(irValueParameter: IrValueParameter) {
-        valueParameterSymbolTable.introduceLocal(irValueParameter.descriptor, irValueParameter.symbol)
+        valueParameterSymbolTable.introduceLocal(irValueParameter.symbol.trueDescriptor, irValueParameter.symbol)
     }
 
     override fun referenceValueParameter(descriptor: ParameterDescriptor) =

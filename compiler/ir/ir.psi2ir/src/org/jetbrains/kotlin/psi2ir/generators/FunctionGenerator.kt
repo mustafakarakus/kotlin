@@ -88,8 +88,9 @@ class FunctionGenerator(declarationGenerator: DeclarationGenerator) : Declaratio
         ktParameterOwner: KtPureElement?,
         ktReceiverParameterElement: KtElement?
     ) {
-        declarationGenerator.generateScopedTypeParameterDeclarations(irFunction, irFunction.descriptor.propertyIfAccessor.typeParameters)
-        irFunction.returnType = irFunction.descriptor.returnType!!.toIrType()
+        val descriptor = irFunction.symbol.trueDescriptor
+        declarationGenerator.generateScopedTypeParameterDeclarations(irFunction, descriptor.propertyIfAccessor.typeParameters)
+        irFunction.returnType = descriptor.returnType!!.toIrType()
         generateValueParameterDeclarations(irFunction, ktParameterOwner, ktReceiverParameterElement)
     }
 
@@ -104,7 +105,7 @@ class FunctionGenerator(declarationGenerator: DeclarationGenerator) : Declaratio
             if (ktAccessor != null && ktAccessor.hasBody()) IrDeclarationOrigin.DEFINED else IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR
         ).buildWithScope { irAccessor ->
             declarationGenerator.generateScopedTypeParameterDeclarations(irAccessor, descriptor.correspondingProperty.typeParameters)
-            irAccessor.returnType = irAccessor.descriptor.returnType!!.toIrType()
+            irAccessor.returnType = irAccessor.symbol.trueDescriptor.returnType!!.toIrType()
             generateValueParameterDeclarations(irAccessor, ktAccessor ?: ktProperty, ktProperty.receiverTypeReference)
             val ktBodyExpression = ktAccessor?.bodyExpression
             irAccessor.body =
@@ -257,7 +258,7 @@ class FunctionGenerator(declarationGenerator: DeclarationGenerator) : Declaratio
         }
 
     fun generateSyntheticFunctionParameterDeclarations(irFunction: IrFunction) {
-        val descriptor = irFunction.descriptor
+        val descriptor = irFunction.symbol.trueDescriptor
         val typeParameters =
             if (descriptor is PropertyAccessorDescriptor)
                 descriptor.correspondingProperty.typeParameters
@@ -273,7 +274,7 @@ class FunctionGenerator(declarationGenerator: DeclarationGenerator) : Declaratio
         ktReceiverParameterElement: KtPureElement?,
         withDefaultValues: Boolean = true
     ) {
-        val functionDescriptor = irFunction.descriptor
+        val functionDescriptor = irFunction.symbol.trueDescriptor
 
         irFunction.dispatchReceiverParameter = functionDescriptor.dispatchReceiverParameter?.let {
             generateReceiverParameterDeclaration(it, ktParameterOwner, irFunction)
