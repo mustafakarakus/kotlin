@@ -19,7 +19,10 @@ package org.jetbrains.kotlin.idea.search
 import com.intellij.openapi.fileTypes.FileType
 import com.intellij.openapi.fileTypes.FileTypeRegistry
 import com.intellij.openapi.progress.ProgressIndicator
+import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.util.Comparing
+import com.intellij.openapi.util.registry.Registry
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
@@ -32,6 +35,7 @@ import com.intellij.psi.search.PsiSearchHelper
 import com.intellij.psi.search.SearchScope
 import com.intellij.psi.search.searches.ReferencesSearch
 import com.intellij.util.CommonProcessors
+import com.intellij.util.Processor
 import com.intellij.util.indexing.FileBasedIndex
 import org.jetbrains.kotlin.idea.KotlinFileType
 import org.jetbrains.kotlin.idea.util.application.runReadAction
@@ -41,6 +45,8 @@ import org.jetbrains.kotlin.psi.KtNamedDeclaration
 import org.jetbrains.kotlin.scripting.definitions.findScriptDefinition
 import org.jetbrains.kotlin.types.expressions.OperatorConventions
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 
 infix fun SearchScope.and(otherScope: SearchScope): SearchScope = intersectWith(otherScope)
 infix fun SearchScope.or(otherScope: SearchScope): SearchScope = union(otherScope)
@@ -130,12 +136,17 @@ fun findScriptsWithUsages(declaration: KtNamedDeclaration): List<KtFile> {
         ?: return emptyList()
 
     val name = declaration.name.takeIf { it?.isNotBlank() == true } ?: return emptyList()
+    return findScriptsWithUsages(name, scope, project)
+}
+
+fun findScriptsWithUsages(name: String, scope: GlobalSearchScope, project: Project): List<KtFile> {
     val collector = CommonProcessors.CollectProcessor(ArrayList<VirtualFile>())
+    val processor = SearchScriptProcessor(collector, null)
     runReadAction {
         FileBasedIndex.getInstance().getFilesWithKey(
             IdIndex.NAME,
             setOf(IdIndexEntry(name, true)),
-            collector,
+            processor,
             scope
         )
     }
@@ -143,4 +154,23 @@ fun findScriptsWithUsages(declaration: KtNamedDeclaration): List<KtFile> {
         .mapNotNull { PsiManager.getInstance(project).findFile(it) as? KtFile }
         .filter { it.findScriptDefinition() != null }
         .toList()
+}
+
+
+class SearchScriptProcessor<T : VirtualFile>(val delegateProcessor: Processor<T>, val virtualFileToIgnoreOccurrencesIn: T?) : Processor<T> {
+    private val maxFilesToProcess = Registry.intValue("ide.unused.symbol.calculation.maxFilesToSearchUsagesIn", 10)
+    private val maxFilesSizeToProcess = Registry.intValue("ide.unused.symbol.calculation.maxFilesSizeToSearchUsagesIn", 524288)
+    private val filesCount = AtomicInteger()
+    private val filesSizeToProcess = AtomicLong()
+
+    override fun process(file: T): Boolean {
+        ProgressManager.checkCanceled()
+        if (Comparing.equal(file, virtualFileToIgnoreOccurrencesIn)) return true
+        val currentFilesCount: Int = filesCount.incrementAndGet()
+        val accumulatedFileSizeToProcess: Long = filesSizeToProcess.addAndGet(if (file.isDirectory) 0 else file.length)
+        return if (currentFilesCount < maxFilesToProcess && accumulatedFileSizeToProcess < maxFilesSizeToProcess)
+            delegateProcessor.process(file)
+        else
+            false
+    }
 }

@@ -7,7 +7,6 @@ package org.jetbrains.kotlin.idea.inspections
 
 import com.intellij.codeInsight.FileModificationService
 import com.intellij.codeInsight.daemon.QuickFixBundle
-import com.intellij.codeInsight.daemon.impl.HighlightInfoType
 import com.intellij.codeInsight.daemon.impl.analysis.HighlightUtil
 import com.intellij.codeInsight.daemon.impl.analysis.JavaHighlightUtil
 import com.intellij.codeInspection.*
@@ -47,6 +46,7 @@ import org.jetbrains.kotlin.idea.caches.resolve.resolveToDescriptorIfAny
 import org.jetbrains.kotlin.idea.core.isInheritable
 import org.jetbrains.kotlin.idea.core.script.ScriptConfigurationManager
 import org.jetbrains.kotlin.idea.core.toDescriptor
+import org.jetbrains.kotlin.idea.debugger.coroutine.util.logger
 import org.jetbrains.kotlin.idea.findUsages.KotlinFindUsagesHandlerFactory
 import org.jetbrains.kotlin.idea.findUsages.handlers.KotlinFindClassUsagesHandler
 import org.jetbrains.kotlin.idea.imports.importableFqName
@@ -90,6 +90,8 @@ import javax.swing.JPanel
 
 class UnusedSymbolInspection : AbstractKotlinInspection() {
     companion object {
+        val log by logger
+
         private val javaInspection = UnusedDeclarationInspection()
 
         private val KOTLIN_ADDITIONAL_ANNOTATIONS = listOf("kotlin.test.*")
@@ -102,6 +104,12 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
             this is KtNamedDeclaration && checkAnnotatedUsingPatterns(this, KOTLIN_ADDITIONAL_ANNOTATIONS)
 
         fun isEntryPoint(declaration: KtNamedDeclaration): Boolean {
+            val declarationInfo = KtNamedDeclarationInfo(declaration)
+            return isEntryPoint(declarationInfo)
+        }
+
+        fun isEntryPoint(declarationInfo: KtNamedDeclarationInfo): Boolean {
+            val declaration = declarationInfo.declaration
             if (declaration.hasKotlinAdditionalAnnotation()) return true
             if (declaration is KtClass && declaration.declarations.any { it.hasKotlinAdditionalAnnotation() }) return true
 
@@ -127,12 +135,19 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
 
             if (lightElement == null) return false
 
-            if (isCheapEnoughToSearchUsages(declaration) == TOO_MANY_OCCURRENCES) return false
+            if (declarationInfo.costResult == TOO_MANY_OCCURRENCES) return false
 
             return javaInspection.isEntryPoint(lightElement)
         }
 
-        private fun isCheapEnoughToSearchUsages(declaration: KtNamedDeclaration): SearchCostResult {
+        class KtNamedDeclarationInfo(val declaration: KtNamedDeclaration) {
+            val costResult: SearchCostResult by lazy {
+                isCheapEnoughToSearchUsages(this)
+            }
+        }
+
+        private fun isCheapEnoughToSearchUsages(declarationInfo: KtNamedDeclarationInfo): SearchCostResult {
+            val declaration = declarationInfo.declaration
             val project = declaration.project
             val psiSearchHelper = PsiSearchHelper.getInstance(project)
 
@@ -199,8 +214,10 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
     }
 
     override fun buildVisitor(holder: ProblemsHolder, isOnTheFly: Boolean, session: LocalInspectionToolSession): PsiElementVisitor {
+        log.debug("Visitor built ${session} ${session.file}")
         return namedDeclarationVisitor(fun(declaration) {
             ProgressManager.checkCanceled()
+            log.debug("naming ${declaration} ${declaration.nameAsSafeName}")
             val message = declaration.describe()?.let { "$it is never used" } ?: return
 
             if (!ProjectRootsUtil.isInProjectSource(declaration)) return
@@ -218,7 +235,9 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
             // More expensive, resolve-based checks
             val descriptor = declaration.resolveToDescriptorIfAny() ?: return
             if (descriptor is FunctionDescriptor && descriptor.isOperator) return
-            if (isEntryPoint(declaration)) return
+
+            val declarationInfo = KtNamedDeclarationInfo(declaration)
+            if (isEntryPoint(declarationInfo)) return
             if (declaration.isFinalizeMethod(descriptor)) return
             if (declaration is KtProperty && declaration.isSerializationImplicitlyUsedField()) return
             if (declaration is KtNamedFunction && declaration.isSerializationImplicitlyUsedMethod()) return
@@ -234,7 +253,7 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
             }
 
             // Main checks: finding reference usages && text usages
-            if (hasNonTrivialUsages(declaration, descriptor)) return
+            if (hasNonTrivialUsages(declarationInfo, descriptor)) return
             if (declaration is KtClassOrObject && classOrObjectHasTextUsages(declaration)) return
 
             val psiElement = declaration.nameIdentifier ?: (declaration as? KtConstructor<*>)?.getConstructorKeyword() ?: return
@@ -267,13 +286,14 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
         return hasTextUsages
     }
 
-    private fun hasNonTrivialUsages(declaration: KtNamedDeclaration, descriptor: DeclarationDescriptor? = null): Boolean {
+    private fun hasNonTrivialUsages(declarationInfo: KtNamedDeclarationInfo, descriptor: DeclarationDescriptor? = null): Boolean {
+        val declaration = declarationInfo.declaration
         val project = declaration.project
         val psiSearchHelper = PsiSearchHelper.getInstance(project)
 
         val useScope = psiSearchHelper.getUseScope(declaration)
         val restrictedScope = if (useScope is GlobalSearchScope) {
-            val enoughToSearchUsages = isCheapEnoughToSearchUsages(declaration)
+            val enoughToSearchUsages = declarationInfo.costResult
             val zeroOccurrences = when (enoughToSearchUsages) {
                 ZERO_OCCURRENCES -> true
                 FEW_OCCURRENCES -> false
@@ -313,8 +333,8 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
                 hasPlatformImplementations(declaration, descriptor)
     }
 
-    private fun checkDeclaration(declaration: KtNamedDeclaration, importedDeclaration: KtNamedDeclaration): Boolean =
-        declaration !in importedDeclaration.parentsWithSelf && !hasNonTrivialUsages(importedDeclaration)
+    private fun checkDeclaration(declaration: KtNamedDeclaration, importedDeclarationInfo: KtNamedDeclarationInfo): Boolean =
+        declaration !in importedDeclarationInfo.declaration.parentsWithSelf && !hasNonTrivialUsages(importedDeclarationInfo)
 
     private val KtNamedDeclaration.isObjectOrEnum: Boolean get() = this is KtObjectDeclaration || this is KtClass && isEnum()
 
@@ -335,21 +355,22 @@ class UnusedSymbolInspection : AbstractKotlinInspection() {
                 if (import.isAllUnder) {
                     val importedFrom = import.importedReference?.getQualifiedElementSelector()?.mainReference?.resolve()
                             as? KtClassOrObject ?: return true
-                    return importedFrom.declarations.none { it is KtNamedDeclaration && hasNonTrivialUsages(it) }
+                    return importedFrom.declarations.none { it is KtNamedDeclaration && hasNonTrivialUsages(KtNamedDeclarationInfo(it)) }
                 } else {
                     if (import.importedFqName != declaration.fqName) {
                         val importedDeclaration =
                             import.importedReference?.getQualifiedElementSelector()?.mainReference?.resolve() as? KtNamedDeclaration
                                 ?: return true
+                        val importedDeclarationInfo = KtNamedDeclarationInfo(importedDeclaration)
 
                         if (declaration.isObjectOrEnum || importedDeclaration.containingClassOrObject is KtObjectDeclaration) return checkDeclaration(
                             declaration,
-                            importedDeclaration
+                            importedDeclarationInfo
                         )
 
                         if (originalDeclaration?.isObjectOrEnum == true) return checkDeclaration(
                             originalDeclaration,
-                            importedDeclaration
+                            importedDeclarationInfo
                         )
 
                         // check type alias
