@@ -78,11 +78,11 @@ artifacts {
     runtime libraryJarWithIr
     archives libraryJarWithIr
     distLibrary libraryJarWithoutIr
-    archives sourcesJar
-    sources sourcesJar
     distJs(file(compileKotlin2Js.kotlinOptions.outputFile)) {
         builtBy(compileKotlin2Js)
     }
 }
+
+configureSourcesJar()
 
 configureJavadocJar()
