@@ -7,6 +7,7 @@ package org.jetbrains.kotlin.codegen.inline
 
 import org.jetbrains.kotlin.backend.common.isBuiltInIntercepted
 import org.jetbrains.kotlin.backend.common.isBuiltInSuspendCoroutineUninterceptedOrReturn
+import org.jetbrains.kotlin.builtins.KOTLIN_REFLECT_FQ_NAME
 import org.jetbrains.kotlin.builtins.KotlinBuiltIns
 import org.jetbrains.kotlin.codegen.AsmUtil
 import org.jetbrains.kotlin.codegen.coroutines.createMethodNodeForCoroutineContext
@@ -15,9 +16,9 @@ import org.jetbrains.kotlin.codegen.coroutines.createMethodNodeForSuspendCorouti
 import org.jetbrains.kotlin.codegen.createMethodNodeForAlwaysEnabledAssert
 import org.jetbrains.kotlin.codegen.isBuiltinAlwaysEnabledAssert
 import org.jetbrains.kotlin.codegen.state.GenerationState
+import org.jetbrains.kotlin.descriptors.CallableDescriptor
 import org.jetbrains.kotlin.descriptors.FunctionDescriptor
 import org.jetbrains.kotlin.descriptors.PackageFragmentDescriptor
-import org.jetbrains.kotlin.resolve.calls.checkers.TypeOfChecker
 import org.jetbrains.kotlin.resolve.calls.checkers.isBuiltInCoroutineContext
 import org.jetbrains.kotlin.resolve.jvm.AsmTypes.*
 import org.jetbrains.kotlin.types.TypeSystemCommonBackendContext
@@ -41,7 +42,7 @@ internal fun generateInlineIntrinsic(
     return when {
         isSpecialEnumMethod(descriptor) ->
             createSpecialEnumMethodBody(descriptor.name.asString(), typeParameters!!.single(), typeSystem)
-        TypeOfChecker.isTypeOf(descriptor) ->
+        descriptor.isTypeOf() ->
             typeSystem.createTypeOfMethodBody(typeParameters!!.single())
         descriptor.isBuiltInIntercepted(languageVersionSettings) ->
             createMethodNodeForIntercepted(languageVersionSettings)
@@ -54,6 +55,10 @@ internal fun generateInlineIntrinsic(
         else -> null
     }
 }
+
+private fun CallableDescriptor.isTypeOf(): Boolean =
+    name.asString() == "typeOf" && valueParameters.isEmpty() &&
+            (containingDeclaration as? PackageFragmentDescriptor)?.fqName == KOTLIN_REFLECT_FQ_NAME
 
 private fun isSpecialEnumMethod(descriptor: FunctionDescriptor): Boolean {
     val containingDeclaration = descriptor.containingDeclaration as? PackageFragmentDescriptor ?: return false
