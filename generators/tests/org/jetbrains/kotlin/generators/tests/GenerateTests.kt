@@ -1010,7 +1010,9 @@ fun main(args: Array<String>) {
         testClass<AbstractUltraLightClassLoadingTest> {
             model("asJava/ultraLightClasses", pattern = KT_OR_KTS)
         }
-
+        testClass<AbstractUltraLightScriptLoadingTest> {
+            model("asJava/ultraLightScripts", pattern = KT_OR_KTS)
+        }
         testClass<AbstractUltraLightFacadeClassTest> {
             model("asJava/ultraLightFacades", pattern = KT_OR_KTS)
         }
