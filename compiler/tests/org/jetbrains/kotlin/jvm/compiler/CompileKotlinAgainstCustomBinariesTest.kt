@@ -295,12 +295,16 @@ class CompileKotlinAgainstCustomBinariesTest : AbstractKotlinCompilerIntegration
         doTestPreReleaseKotlinLibrary(K2JSCompiler(), "library", File(tmpdir, "usage.js"))
     }
 
-    fun testReleaseCompilerAgainstPreReleaseLibrarySkipVersionCheck() {
-        doTestPreReleaseKotlinLibrary(K2JVMCompiler(), "library", tmpdir, "-Xskip-metadata-version-check")
+    fun testReleaseCompilerAgainstPreReleaseLibrarySkipPrereleaseCheck() {
+        doTestPreReleaseKotlinLibrary(K2JVMCompiler(), "library", tmpdir, "-Xskip-prerelease-check")
     }
 
-    fun testReleaseCompilerAgainstPreReleaseLibraryJsSkipVersionCheck() {
-        doTestPreReleaseKotlinLibrary(K2JSCompiler(), "library", File(tmpdir, "usage.js"), "-Xskip-metadata-version-check")
+    fun testReleaseCompilerAgainstPreReleaseLibraryJsSkipPrereleaseCheck() {
+        doTestPreReleaseKotlinLibrary(K2JSCompiler(), "library", File(tmpdir, "usage.js"), "-Xskip-prerelease-check")
+    }
+
+    fun testReleaseCompilerAgainstPreReleaseLibrarySkipMetadataVersionCheck() {
+        doTestPreReleaseKotlinLibrary(K2JVMCompiler(), "library", tmpdir, "-Xskip-metadata-version-check")
     }
 
     fun testPreReleaseCompilerAgainstPreReleaseLibraryStableLanguageVersion() {
