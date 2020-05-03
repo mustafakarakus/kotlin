@@ -14,6 +14,7 @@ import org.gradle.api.attributes.Usage
 import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.file.DuplicatesStrategy
 import org.gradle.api.plugins.BasePluginConvention
+import org.gradle.api.plugins.JavaPlugin.*
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
@@ -110,9 +111,10 @@ fun <T : Jar> Project.runtimeJar(task: TaskProvider<T>, body: T.() -> Unit = {})
         }
     }
 
-    val javaComponent = components.findByName("java") as AdhocComponentWithVariants
-    javaComponent.withVariantsFromConfiguration(configurations["runtimeElements"]) { skip() }
-    javaComponent.addVariantsFromConfiguration(runtimeJar) { }
+    configurePublishedComponent {
+        withVariantsFromConfiguration(configurations[RUNTIME_ELEMENTS_CONFIGURATION_NAME]) { skip() }
+        addVariantsFromConfiguration(runtimeJar) { }
+    }
 
     return task
 }
@@ -149,6 +151,10 @@ fun Project.sourcesJar(body: Jar.() -> Unit = {}): TaskProvider<Jar> {
     addArtifact("archives", sourcesJar)
     addArtifact("sources", sourcesJar)
 
+    configurePublishedComponent {
+        addVariantsFromConfiguration(configurations[SOURCES_ELEMENTS_CONFIGURATION_NAME]) { }
+    }
+
     return sourcesJar
 }
 
@@ -168,6 +174,11 @@ fun Project.javadocJar(body: Jar.() -> Unit = {}): TaskProvider<Jar> {
     }
 
     addArtifact("archives", javadocTask)
+
+    configurePublishedComponent {
+        addVariantsFromConfiguration(configurations[JAVADOC_ELEMENTS_CONFIGURATION_NAME]) { }
+    }
+
     return javadocTask
 }
 
@@ -187,8 +198,9 @@ fun Project.modularJar(body: Jar.() -> Unit): TaskProvider<Jar> {
     addArtifact("modularJar", modularJarTask)
     addArtifact("archives", modularJarTask)
 
-    val javaComponent = components.findByName("java") as AdhocComponentWithVariants
-    javaComponent.addVariantsFromConfiguration(modularJar) { }
+    configurePublishedComponent {
+        addVariantsFromConfiguration(modularJar) { mapToMavenScope("runtime") }
+    }
 
     return modularJarTask
 }
@@ -285,3 +297,6 @@ fun Project.cleanArtifacts() {
         }
     }
 }
+
+fun Project.configurePublishedComponent(configure: AdhocComponentWithVariants.() -> Unit) =
+    (components.findByName(KotlinBuildPublishingPlugin.ADHOC_COMPONENT_NAME) as AdhocComponentWithVariants?)?.apply(configure)
