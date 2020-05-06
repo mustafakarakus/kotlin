@@ -45,9 +45,9 @@ class Ir2DescriptorManglerAdapter(private val delegate: DescriptorBasedKotlinMan
     override fun IrDeclaration.isExported(): Boolean {
         return when (this) {
             is IrAnonymousInitializer -> false
-            is IrEnumEntry -> delegate.run { descriptor.isExportEnumEntry() }
-            is IrField -> delegate.run { descriptor.isExportField() }
-            else -> delegate.run { descriptor.isExported() }
+            is IrEnumEntry -> delegate.run { symbol.trueDescriptor.isExportEnumEntry() }
+            is IrField -> delegate.run { symbol.trueDescriptor.isExportField() }
+            else -> delegate.run { trueDescriptor.isExported() }
         }
     }
 
