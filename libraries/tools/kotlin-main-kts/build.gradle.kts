@@ -14,6 +14,7 @@ val jarBaseName = property("archivesBaseName") as String
 val proguardLibraryJars by configurations.creating {
     attributes {
         attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage.JAVA_RUNTIME))
+        attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category.LIBRARY))
     }
 }
 val relocatedJarContents by configurations.creating  {
