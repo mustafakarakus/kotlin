@@ -1,5 +1,4 @@
 // !LANGUAGE: +MultiPlatformProjects
-// IGNORE_BACKEND: JS_IR
 // IGNORE_BACKEND_FIR: JVM_IR
 // MODULE: lib
 // FILE: common.kt
