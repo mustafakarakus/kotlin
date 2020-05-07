@@ -34,6 +34,7 @@ class AllOpenClassGenerator(session: FirSession) : FirClassGenerationExtension(s
         if (annotatedDeclaration !is FirRegularClass) return emptyList()
         val klass = buildClassImpl {
             session = this@AllOpenClassGenerator.session
+            origin = FirDeclarationOrigin.Plugin(AllOpenPluginKey)
             status = FirResolvedDeclarationStatusImpl(Visibilities.PUBLIC, FirEffectiveVisibilityImpl.Public, Modality.FINAL)
             classKind = ClassKind.OBJECT
             scopeProvider = (session.firProvider as FirProviderImpl).kotlinScopeProvider
