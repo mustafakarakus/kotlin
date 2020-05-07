@@ -24,8 +24,8 @@ class AllOpenStatusTransformer(session: FirSession) : FirStatusTransformerExtens
         get() = Mode.ALL_IN_ANNOTATED_ELEMENT
 
     override val annotations: Set<AnnotationFqn> =
-        setOf(FqName.fromSegments(listOf("org", "jetbrains", "kotlin", "fir", "allopen", "AllOpen")))
+        setOf(FqName("org.jetbrains.kotlin.fir.allopen.AllOpen"))
 
     override val metaAnnotations: Set<AnnotationFqn> =
-        setOf(FqName.fromSegments(listOf("org", "jetbrains", "kotlin", "fir", "allopen", "AllOpen")))
+        setOf(FqName("org.jetbrains.kotlin.fir.allopen.AllOpen"))
 }
