@@ -45,7 +45,7 @@ class AllOpenClassGenerator(session: FirSession) : FirClassGenerationExtension(s
     }
 
     override val annotations: Set<AnnotationFqn> =
-        setOf(FqName.fromSegments(listOf("org", "jetbrains", "kotlin", "fir", "allopen", "WithClass")))
+        setOf(FqName("org.jetbrains.kotlin.fir.allopen.WithClass"))
 
     override val metaAnnotations: Set<AnnotationFqn> = emptySet()
 }
